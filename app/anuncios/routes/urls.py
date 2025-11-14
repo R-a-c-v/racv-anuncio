@@ -1,22 +1,20 @@
 from flask import  request
  
 from  ...app import app
-from app.listing.services.controllers import delete
-from app.listing.services.controllers import retrieve_listing
-from app.listing.services.create import create
-from app.listing.services.list import list
-from app.listing.services.update import update
+from app.anuncios.services.controllers import remover  
+from app.anuncios.services.controllers import listar_anuncio
+from app.anuncios.services.controllers import criar
+from app.anuncios.services.controllers import actualizar
 
 @app.route("/anuncio", methods=['GET', 'POST'])
-def create_list_listings():
-    if request.method == 'GET': return list()
-    if request.method == 'POST': return create()    
+def criar_listar_anuncio():
+    if request.method == 'GET': return listar_anuncio()
+    if request.method == 'POST': return criar()    
 #end-def
 
-@app.route("/listings/<listing_id>", methods=['GET', 'DELETE', 'PUT'])
-def retreive_upadate_destroy_accounts(listing_id):
-    
-    if request.method == 'GET': return retrieve_listing(listing_id) 
-    elif request.method == 'DELETE': return delete(listing_id)
-    elif  request.method == 'PUT': return update(listing_id)
+@app.route("/anuncio/<id_anuncio>", methods=['GET', 'DELETE', 'PUT'])
+def listar_actualizar_apagar_anuncio(id_anuncio):
+    if request.method == 'GET': return actualizar(id_anuncio) 
+    elif request.method == 'DELETE': return remover(id_anuncio)
+    elif  request.method == 'PUT': return actualizar(id_anuncio)
 #end-def

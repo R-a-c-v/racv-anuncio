@@ -17,21 +17,23 @@ def remover(id_anuncio):
     #end-try
 #end-def
          
-def listar_anuncio(id_anuncio):
+def listar_todos():
     form = []
     try:    
-        if id_anuncio:
-
-            response = Anuncio.query.get(id_anuncio).to_dict()
-            return jsonify (response)
-        
-        else:
-            anuncios = Anuncio.query.all()
+        anuncios = Anuncio.query.all()
     
-            for anuncio in anuncios:
-                form.append(anuncio.to_dict()) 
+        for anuncio in anuncios:
+            form.append(anuncio.to_dict()) 
         
-            return jsonify(form)
+        return jsonify(form)
+            
+    except AttributeError  as e :
+        return jsonify ({"Response": "DATA NOT FOUND"}),404
+
+def listar(id_anuncio):    
+    try:    
+        response = Anuncio.query.get(id_anuncio).to_dict()
+        return jsonify (response)
             
     except AttributeError  as e :
         return jsonify ({"Response": "DATA NOT FOUND"}),404

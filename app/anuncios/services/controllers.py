@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime
 
 from flask import request 
@@ -5,11 +6,12 @@ from flask import jsonify
 
 
 from app import  dbt 
+from  app.anuncios.models.anunciante import Anunciante
 from  app.anuncios.models.anuncio import Anuncio
 
 def remover(id_anuncio):
     try:
-        Anuncio.query.filter_by( Anuncio.id_anuncio ==id_anuncio).delete()
+        Anuncio.query.filter( Anuncio.id_anuncio == id_anuncio).delete()
         dbt.session.commit()  
         return jsonify({'Response': "DONE "}),200
     except AttributeError as e:
@@ -66,15 +68,15 @@ def criar ():
                 disponibilidade = safe_str(request_data['disponibilidade']),
                 audit_user = safe_str(request_data['audit_user']),
                 audit_timestamp = safe_str(request_data['audit_timestamp']),
-                id_anunciante =safe_str(request_data['id_anunciante'])
+                id_anunciante =request_data['id_anunciante']
             ) 
             dbt.session.add(anuncio)
             dbt.session.commit()
         
-        return jsonify(anuncio.to_dict()), 200
+        return jsonify(anuncio.to_dict())   
     
     except Exception as e:
-        #traceback.print_exc()
+        traceback.print_exc()
         return jsonify({"error":str(e)})
 
 def actualizar(id_anuncio):

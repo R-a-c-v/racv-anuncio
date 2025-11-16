@@ -61,7 +61,7 @@ def criar ():
                 caucao = safe_str(request_data['caucao']),
                 fotografia = safe_str(request_data['fotografia']),
                 transmissao = safe_str(request_data['transmissao']),
-                link = safe_str(request_data['link']),
+                link = "link",
                 ar_condicionado = safe_str(request_data['ar_condicionado']),
                 data = safe_str(request_data['data']),
                 gps = safe_str(request_data['gps']),
@@ -72,7 +72,7 @@ def criar ():
             ) 
             dbt.session.add(anuncio)
             dbt.session.commit()
-        
+        print(f'Anuncios criado é', anuncio.to_dict())
         return jsonify(anuncio.to_dict())   
     
     except Exception as e:

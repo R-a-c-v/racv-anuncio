@@ -10,7 +10,6 @@ migrate = Migrate()
 def create_app(config_mode='development'):
     app = Flask(__name__)
     CORS(app)
-   
     app.config.from_object(config[config_mode])    
    
     dbt.init_app(app)

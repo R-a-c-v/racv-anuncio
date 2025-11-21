@@ -1,6 +1,7 @@
 import traceback
 from datetime import datetime
 
+import requests
 from flask import request 
 from flask import jsonify
 
@@ -110,4 +111,54 @@ def actualizar(id_anuncio):
         return jsonify({"error":str(e)})
     #end-try
 #end-def
-  
+def pesquisa_principal():
+    lista_pesquisa_marca = []
+    lista_pesquisa_local_anunciante = []
+    veiculo = request.args.get("veiculo")
+    local = request.args.get("locais")
+
+    param={
+        "ilha":local
+    }
+    veiculos = Anuncio.query.filter(Anuncio.marca == veiculo ).all()    
+    
+    for veiculo in veiculos:
+        id_anunciante = veiculo.to_dict()["id_anunciante"]
+        print(id_anunciante , type(id_anunciante))
+        resposta = requests.get(f"http://127.0.0.1:5000/pesquisa_principal_inicio/{id_anunciante}",params=param)
+        
+        if resposta:
+            lista_pesquisa_local_anunciante.append(resposta.json())  
+            lista_pesquisa_marca.append( veiculo.to_dict())
+
+    return jsonify({"marca":lista_pesquisa_marca,"localizacao":lista_pesquisa_local_anunciante})
+
+def filtragem():
+    lista_pesquisa_marca = []
+    lista_pesquisa_local_anunciante = []
+    veiculo = request.args.get("veiculo")
+    local = request.args.get("locais")
+    ilha = request.args.get("ilha")
+    percoMin = request.args.get("percoMin")
+    precoMax = request.args.get("precoMax")
+
+    print(f'{ilha,local,veiculo,precoMax,percoMin}')
+    
+    """
+    param={
+        "ilha":local
+    }
+    veiculos = Anuncio.query.filter(Anuncio.marca == veiculo ).all()    
+    
+    for veiculo in veiculos:
+        id_anunciante = veiculo.to_dict()["id_anunciante"]
+        print(id_anunciante , type(id_anunciante))
+        resposta = requests.get(f"http://127.0.0.1:5000/pesquisa_principal_inicio/{id_anunciante}",params=param)
+        
+        if resposta:
+            lista_pesquisa_local_anunciante.append(resposta.json())  
+            lista_pesquisa_marca.append( veiculo.to_dict())
+
+    return jsonify({"marca":lista_pesquisa_marca,"localizacao":lista_pesquisa_local_anunciante})
+    """
+    return jsonify({"estado":"ddd"}),201

@@ -7,6 +7,7 @@ from .config import config
 dbt = SQLAlchemy()
 migrate = Migrate()
 
+
 def create_app(config_mode='development'):
     app = Flask(__name__)
     CORS(app)

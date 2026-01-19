@@ -23,7 +23,11 @@ def create_app(config_mode):
         )  
 
     app.config.from_object(config[config_mode])    
-   
+    
+    @app.get("/ping")
+    def ping():
+        return jsonify({"status": "ok"}), 200
+
 
     dbt.init_app(app)
     migrate.init_app(app, dbt)

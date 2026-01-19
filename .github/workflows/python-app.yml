@@ -84,13 +84,13 @@ jobs:
         run: |
           set -x
           RELEASE_NAME="${{ env.APP_NAME }}"
-          tar --warning=no-file-changed -czf "${RELEASE_NAME}.tar.gz" \
+          tar --warning=no-file-changed -czvf "${RELEASE_NAME}.tar.gz" \
             --exclude='.git' \
             --exclude='*.tar.gz' \
             --exclude='venv' \
             --exclude='.venv' \
             --exclude='__pycache__' \
-            .
+            . || true
           echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
 
       - name: Set Up SSH Key

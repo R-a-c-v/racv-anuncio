@@ -16,8 +16,11 @@ def create_app(config_mode):
     CORS(app)
     
     if config_mode == "testing":
-        app.config.from_object(config[config_mode])    
-
+           app.config.update(
+            TESTING=True,
+            SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
+            SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        )  
     app.config.from_object(config[config_mode])    
    
 

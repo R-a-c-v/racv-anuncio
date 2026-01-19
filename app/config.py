@@ -12,7 +12,10 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.getenv("TEST_DATABASE_URL")
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"  # <-- important line
+ 
 
+      
 class StagingConfig(Config):
     DEVELOPMENT = True
   

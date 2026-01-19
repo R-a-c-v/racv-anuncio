@@ -13,16 +13,14 @@ def create_app(config_mode):
  
 
     app = Flask(__name__)
+    CORS(app)
     
     if config_mode == "testing":
-       app.config.update(
-        TESTING=True,
-        SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-       )
-    CORS(app)
+        app.config.from_object(config[config_mode])    
+
     app.config.from_object(config[config_mode])    
    
+
     dbt.init_app(app)
     migrate.init_app(app, dbt)
 

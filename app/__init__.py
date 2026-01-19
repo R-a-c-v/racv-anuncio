@@ -21,6 +21,7 @@ def create_app(config_mode):
             SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
             SQLALCHEMY_TRACK_MODIFICATIONS=False,
         )  
+
     app.config.from_object(config[config_mode])    
    
 

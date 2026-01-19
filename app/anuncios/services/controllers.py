@@ -50,21 +50,36 @@ def safe_str(value):
         return ""
     return str(value).strip()
 
+def carregar_inteiro(valor , default=0):
+    if valor is None:
+        return default
+    if isinstance(valor, str):
+        valor = valor.strip()
+        if valor.lower() == 'none' or valor == '':
+            return default
+    try:
+        return int(valor)
+    except ValueError:
+        return default
+
 def criar ():
     try:
         anuncios = request.get_json() 
-        for request_data in anuncios: 
+
+        if isinstance(anuncios,dict):
+            request_data = anuncios
+            
             anuncio = Anuncio( 
                 modelo = safe_str(request_data['modelo']),
                 marca = safe_str(request_data['marca']),
-                numero_passageiro =safe_str( request_data['numero_passageiro']),  
+                numero_passageiro =carregar_inteiro( request_data['numero_passageiro']),  
                 combustivel = safe_str(request_data['combustivel']),
-                preco = safe_str(request_data['preco']),
-                ano = safe_str(request_data['ano']),
-                caucao = safe_str(request_data['caucao']),
+                preco = carregar_inteiro(request_data['preco']),
+                ano = carregar_inteiro(request_data['ano']),
+                caucao = carregar_inteiro(request_data['caucao']),
                 fotografia = safe_str(request_data['fotografia']),
                 transmissao = safe_str(request_data['transmissao']),
-                link = "link",
+                link = safe_str(request_data['link']),
                 ar_condicionado = safe_str(request_data['ar_condicionado']),
                 data = safe_str(request_data['data']),
                 gps = safe_str(request_data['gps']),
@@ -73,9 +88,40 @@ def criar ():
                 audit_timestamp = safe_str(request_data['audit_timestamp']),
                 id_anunciante =request_data['id_anunciante']
             ) 
+            
             dbt.session.add(anuncio)
             dbt.session.commit()
+            
+            print(f'Anuncios criado é', anuncio.to_dict())
+            
+            return jsonify(anuncio.to_dict())   
+                
+        for request_data in anuncios: 
+            anuncio = Anuncio( 
+                modelo = safe_str(request_data['modelo']),
+                marca = safe_str(request_data['marca']),
+                numero_passageiro =carregar_inteiro( request_data['numero_passageiro']),  
+                combustivel = safe_str(request_data['combustivel']),
+                preco = carregar_inteiro(request_data['preco']),
+                ano = carregar_inteiro(request_data['ano']),
+                caucao = carregar_inteiro(request_data['caucao']),
+                fotografia = safe_str(request_data['fotografia']),
+                transmissao = safe_str(request_data['transmissao']),
+                link = safe_str(request_data['link']),
+                ar_condicionado = safe_str(request_data['ar_condicionado']),
+                data = safe_str(request_data['data']),
+                gps = safe_str(request_data['gps']),
+                disponibilidade = safe_str(request_data['disponibilidade']),
+                audit_user = safe_str(request_data['audit_user']),
+                audit_timestamp = safe_str(request_data['audit_timestamp']),
+                id_anunciante =request_data['id_anunciante']
+            ) 
+           
+            dbt.session.add(anuncio)
+            dbt.session.commit()
+        
         print(f'Anuncios criado é', anuncio.to_dict())
+        
         return jsonify(anuncio.to_dict())   
     
     except Exception as e:
@@ -119,7 +165,7 @@ def pesquisa_principal():
     local = request.args.get("locais")
     print(F'{veiculo, local}')
 
-    if (veiculo ==''  and local=='')  or  (veiculo ==''  and local =='Santo Antão'):
+    if (veiculo ==''  and local=='')  :
         print(f'entrou')
         veiculos = Anuncio.query.all()    
         print(len(veiculos))
@@ -137,18 +183,33 @@ def pesquisa_principal():
         param={
             "ilha":local
         }
-        veiculos = Anuncio.query.filter(Anuncio.marca == veiculo ).all()    
         
-        for veiculo in veiculos:
-            id_anunciante = veiculo.to_dict()["id_anunciante"]
-            print(id_anunciante , type(id_anunciante))
-            resposta = requests.get(f"http://127.0.0.1:5000/pesquisa_principal_inicio/{id_anunciante}",params=param)
-            
-            if resposta:
-                lista_pesquisa_local_anunciante.append(resposta.json())  
-                lista_pesquisa_marca.append( veiculo.to_dict())
+        respostas = requests.get(f"http://127.0.0.1:5000/pesquisa_filtragem_inicio/",params=param)
+        
+        #print("olimmeeeeee",respostas.json()[0]["ilha"])     
+        if respostas.status_code !=500:
+            dados = respostas.json()                
+            for dado in dados:
+                id_anunciante = dado["id_anunciante"]   
+                
+                print(id_anunciante)
+                
+                if dado:        
+                    pesquisas_filtradas = Anuncio.query.filter(
+                        Anuncio.id_anunciante == id_anunciante,
+                    ).all()          
+                    for pesquisa in pesquisas_filtradas:        
+                        lista_pesquisa_local_anunciante.append(dado)  
+                        lista_pesquisa_marca.append( pesquisa.to_dict())
+        else:
+            print("eeeee")
+            return jsonify({"marca": [],"localizacao":[]}),201
 
-        return jsonify({"marca":lista_pesquisa_marca,"localizacao":lista_pesquisa_local_anunciante})
+        
+        print("Lista final anunciante",len(lista_pesquisa_local_anunciante))
+        print("Lista final marca    ",len(lista_pesquisa_local_anunciante))
+        
+        return jsonify({"marca":lista_pesquisa_marca,"localizacao":lista_pesquisa_local_anunciante}),201
 
 def filtragem():
     lista_pesquisa_marca = []
@@ -159,43 +220,69 @@ def filtragem():
     passageiro_um = request.args.get("passageiro_um")
     passageiro_quatro = request.args.get("passageiro_quatro")
     ar_condicionado = request.args.get("ar_condicionado") 
-    preco_min = request.args.get("preco_min") 
-    preco_max = request.args.get("preco_max") 
-    
-    
+    minimo = int(request.args.get("preco_min")) 
+    maximo = int(request.args.get("preco_max"))
+    numero_passageiro =  ""
+    max = 0
+    min = 0
+
     # Montagem das listas de filtros
     if automatico == "true":
         automatico="automatico"
     if manual == "true":
         manual= "manual"
     if passageiro_um == "true":
-        passageiro_um = "1"
+        min = 0
+        max = 4
     if passageiro_quatro == "true":
-        passageiro_quatro = "4"
+        min = 5
+        max = 100
     if ar_condicionado == "true":
         ar_condicionado = "Sim" 
-    #print ("Manual:", manual)
-    #print ("Automatico:", automatico)
-    #print ("Passageiro Um:", passageiro_um)
-    #print ("Passageiro quatro:", passageiro_quatro)
-    #print ("Ar condicionado:", ar_condicionado)
-    #print ("Preco minimo:", preco_min)
-    #print ("Preco maximo:", preco_max)
 
     
-    if all(v in ("false", "") for v in [manual, automatico, passageiro_um, passageiro_quatro, ar_condicionado]):
-        
-        veiculos = Anuncio.query.all()    
-        for veiculo in veiculos:
-            id_anunciante = veiculo.to_dict()["id_anunciante"]
+    print ("Manual:", manual)
+    print ("Automatico:", automatico)
+    print ("Passageiro Um:", passageiro_um)
+    print ("Passageiro quatro:", passageiro_quatro)
+    print ("Ar condicionado:", ar_condicionado)
+    print ("Preco minimo:", minimo ,type(minimo))
+    print ("Preco maximo:", maximo,type(maximo))
+    print ("Numero:", numero_passageiro , type(numero_passageiro))
 
-            lista_pesquisa_marca.append( veiculo.to_dict()) 
     
-            resposta = requests.get(f"http://127.0.0.1:5000/anunciante/{id_anunciante}")
-            lista_pesquisa_local_anunciante.append(resposta.json())  
+    if all(v in ("false", "") for v in [manual, automatico, passageiro_um, passageiro_quatro, ar_condicionado,minimo]):    
+        param={
+            "ilha":local
+        }
+        print("dddd" , local)
+        respostas = requests.get(f"http://127.0.0.1:5000/pesquisa_filtragem_inicio/",params=param)
         
-        return jsonify({"marca":lista_pesquisa_marca,"localizacao":lista_pesquisa_local_anunciante})
-    
+        #print("olimmeeeeee",respostas.json()[0]["ilha"])     
+        if respostas.status_code !=500:
+            dados = respostas.json()                
+            for dado in dados:
+                id_anunciante = dado["id_anunciante"]   
+                
+                print(id_anunciante)
+                
+                if dado:        
+                    pesquisas_filtradas = Anuncio.query.filter(
+                        Anuncio.id_anunciante == id_anunciante,
+                    ).all()          
+                    for pesquisa in pesquisas_filtradas:        
+                        lista_pesquisa_local_anunciante.append(dado)  
+                        lista_pesquisa_marca.append( pesquisa.to_dict())
+        else:
+            print("eeeee")
+            return jsonify({"marca": [],"localizacao":[]}),201
+
+        
+        print("Lista final anunciante",len(lista_pesquisa_local_anunciante))
+        print("Lista final marca",len(lista_pesquisa_local_anunciante))
+        
+        return jsonify({"marca":lista_pesquisa_marca,"localizacao":lista_pesquisa_local_anunciante}),201
+
     else:    
         param={
             "ilha":local
@@ -206,23 +293,72 @@ def filtragem():
         #print("olimmeeeeee",respostas.json()[0]["ilha"])     
         dados = respostas.json()     
         
+
+        print ("Manual:", manual)
+        print ("Automatico:", automatico)
+        print ("Ilha:", local)
+        #print ("Passageiro quatro:", passageiro_quatro)
+        #print ("Ar condicionado:", ar_condicionado)
+        #print ("Preco minimo:", preco_min)
+        #print ("Preco maximo:", preco_max)
+
+
         for dado in dados:
             id_anunciante = dado["id_anunciante"]   
             print(id_anunciante)
             if dado:        
-                pesquisas_filtradas = Anuncio.query.filter(
-                    Anuncio.id_anunciante == id_anunciante,
-                    or_(
-                        Anuncio.transmissao == manual,
-                        Anuncio.transmissao == automatico,                  
-                        Anuncio.ar_condicionado == ar_condicionado
-                    ),
+                query = Anuncio.query.filter(Anuncio.id_anunciante == id_anunciante)
+                
+                  
+                # --- FILTRO DE TRANSMISSÃO ---
+                transmissoes_selecionadas = []
+                if manual == "manual":
+                    transmissoes_selecionadas.append("manual")
+                if automatico == "automatico":
+                    transmissoes_selecionadas.append("automático")
 
-                ).all()          
+                # Aplica filtro apenas se o usuário selecionou < todas as opções possíveis
+                if transmissoes_selecionadas :
+                    query = query.filter(Anuncio.transmissao.in_(transmissoes_selecionadas))
+                # Caso contrário, não aplica filtro → retorna todos
+
+                # --- FILTRO DE AR CONDICIONADO ---
+                if ar_condicionado == "Sim":
+                    query = query.filter(Anuncio.ar_condicionado == "Sim")
+
+                # Se selecionar Sim + Não ou nenhuma opção → não filtra
+
+                # --- FILTRO DE NÚMERO DE PASSAGEIROS ---
+            
+                if passageiro_um == "true":
+                    query = query.filter(Anuncio.numero_passageiro.between(min, max))
+                if passageiro_quatro == "true":
+                    query = query.filter(Anuncio.numero_passageiro.between(min, max))
+            
+                # Nenhum valor selecionado → não filtra
+
+                # --- FILTRO DE PREÇO ---
+                """
+                if preco_min is not None and preco_max is not None:
+                    query = query.filter(Anuncio.preco.between(preco_min, preco_max))
+                elif preco_min is not None:
+                    query = query.filter(Anuncio.preco >= preco_min)
+                """
+                print("dd")
+                
+                if minimo:
+                    query = query.filter(Anuncio.preco <= minimo)
+                
+                # Nenhum valor selecionado → não filtra
+
+                # Executa query final
+                pesquisas_filtradas = query.all()
+
+
                 for pesquisa in pesquisas_filtradas:        
                     lista_pesquisa_local_anunciante.append(dado)  
                     lista_pesquisa_marca.append( pesquisa.to_dict())
-        
+                                 
         print("Lista final anunciante",len(lista_pesquisa_local_anunciante))
         print("Lista final marca    ",len(lista_pesquisa_local_anunciante))
         

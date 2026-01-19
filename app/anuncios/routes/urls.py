@@ -1,4 +1,5 @@
-from flask import  request
+from flask import  request 
+from flask import  jsonify
  
 from  ...app import app
 from app.anuncios.services.controllers import remover  
@@ -30,4 +31,8 @@ def pesquisa_filtrada():
     if request.method == 'GET': return filtragem()
 
 
+
+@app.get("/ping")
+def ping():
+    return jsonify({"status": "ok"}), 200
 #end-def

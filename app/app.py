@@ -4,6 +4,9 @@ from  app import create_app
 
 config_mode = os.getenv('CONFIG_MODE') or 'development'
 app = create_app(config_mode)
+#123
+#456
+#789
 
 from  app.anuncios.routes.urls  import *
 

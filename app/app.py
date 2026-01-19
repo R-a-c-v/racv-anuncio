@@ -7,6 +7,8 @@ app = create_app(config_mode)
 #123
 #456
 #789
+#789
+#789
 
 from  app.anuncios.routes.urls  import *
 

@@ -82,6 +82,7 @@ jobs:
          
       - name: Package repository (tar.gz)
         run: |
+          set -x
           RELEASE_NAME="${{ env.APP_NAME }}"
           tar --warning=no-file-changed -czf "${RELEASE_NAME}.tar.gz" \
             --exclude='.git' \

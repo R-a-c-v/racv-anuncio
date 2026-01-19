@@ -1,39 +1,185 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
-name: Python application
+name: Anunciante Flask - CI/CD
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
 
+env:
+  PYTHON_VERSION: "3.12"
+  APP_NAME: "racv-anunciante"
+  APP_ROOT: "/opt/racv-anunciante"
+  SERVICE_NAME: "racv-anunciante.service"
+  APP_PORT: "5001"  # altere a porta se diferente
+  HEALTH_PATH: "/ping"
+
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pytest
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 pytest
+
+      - name: Run tests
+        run: PYTHONPATH=. pytest ./tests/
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: build
+    if: success()
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Package repository (tar.gz)
+        run: |
+          RELEASE_NAME="${{ env.APP_NAME }}"
+          tar --warning=no-file-changed -czf "${RELEASE_NAME}.tar.gz" \
+            --exclude='.git' \
+            --exclude='*.tar.gz' \
+            --exclude='venv' \
+            --exclude='.venv' \
+            --exclude='__pycache__' \
+            .
+          echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
+
+      - name: Set Up SSH Key
+        run: |
+          echo "${{ secrets.SSH_KEY_001 }}" > ~/deploy_key.pem
+          chmod 400 ~/deploy_key.pem
+
+      - name: Create env file from secrets
+        run: |
+          cat > app.env << EOF
+          SQLALCHEMY_DATABASE_URI=${{ secrets.ANUNCIANTE_DATABASE_URI }}
+          SECRET_KEY=${{ secrets.ANUNCIANTE_SECRET_KEY }}
+          FLASK_ENV=production
+          EOF
+
+      - name: Upload release bundle
+        run: |
+          scp -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
+            "${{ env.RELEASE_NAME }}.tar.gz" \
+            ${{ vars.VM_USERNAME }}@${{ vars.VM_IP }}:~/
+
+      - name: Deploy on server (atomic symlink + systemd + health + rollback)
+        shell: bash
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
+            ${{ vars.VM_USERNAME }}@${{ vars.VM_IP }} \
+            "export RELEASE_NAME='${{ env.RELEASE_NAME }}'; \
+             export APP_ROOT='${{ env.APP_ROOT }}'; \
+             export SERVICE_NAME='${{ env.SERVICE_NAME }}'; \
+             export APP_PORT='${{ env.APP_PORT }}'; \
+             export HEALTH_PATH='${{ env.HEALTH_PATH }}'; bash -s" << 'EOF'
+            set -euo pipefail
+
+            : "${RELEASE_NAME:?missing}"
+            : "${APP_ROOT:?missing}"
+            : "${SERVICE_NAME:?missing}"
+            : "${APP_PORT:?missing}"
+            : "${HEALTH_PATH:?missing}"
+
+            APP_USER="$(whoami)"
+            RELEASES_DIR="$APP_ROOT/releases"
+            SHARED_DIR="$APP_ROOT/shared"
+            VENV_DIR="$SHARED_DIR/venv"
+            LOG_DIR="$SHARED_DIR/logs"
+            CURRENT_LINK="$APP_ROOT/current"
+
+            sudo mkdir -p "$RELEASES_DIR" "$SHARED_DIR" "$LOG_DIR"
+            sudo chown -R "$APP_USER":"$APP_USER" "$APP_ROOT"
+
+            mv ~/"${RELEASE_NAME}.tar.gz" "$RELEASES_DIR/"
+            cd "$RELEASES_DIR"
+            mkdir -p "$RELEASE_NAME"
+            tar -xzf "${RELEASE_NAME}.tar.gz" -C "$RELEASE_NAME"
+            rm -f "${RELEASE_NAME}.tar.gz"
+
+            if [ ! -d "$VENV_DIR" ]; then
+              python3 -m venv "$VENV_DIR"
+            fi
+            source "$VENV_DIR/bin/activate"
+            pip install --upgrade pip
+            if [ -f "$RELEASES_DIR/$RELEASE_NAME/requirements.txt" ]; then
+              pip install -r "$RELEASES_DIR/$RELEASE_NAME/requirements.txt"
+            fi
+            pip show gunicorn >/dev/null 2>&1 || pip install gunicorn
+
+            if [ -f ~/app.env ]; then
+              sudo mv ~/app.env "$SHARED_DIR/.env"
+              sudo chown "$APP_USER":"$APP_USER" "$SHARED_DIR/.env"
+              sudo chmod 600 "$SHARED_DIR/.env"
+            fi
+
+            PREVIOUS_TARGET="$(readlink -f "$CURRENT_LINK" || true)"
+            ln -sfn "$RELEASES_DIR/$RELEASE_NAME" "$CURRENT_LINK"
+
+            SYSTEMD_FILE="/etc/systemd/system/$SERVICE_NAME"
+            printf '%s\n' "[Unit]
+            Description=Anunciante Flask (Gunicorn)
+            After=network.target
+            [Service]
+            Type=simple
+            User=$APP_USER
+            WorkingDirectory=$APP_ROOT/current
+            Environment=PYTHONPATH=$APP_ROOT/current
+            EnvironmentFile=$SHARED_DIR/.env
+            ExecStart=$VENV_DIR/bin/gunicorn app.app:app --bind 0.0.0.0:$APP_PORT --workers 3 --timeout 60 --access-logfile - --error-logfile -
+            Restart=always
+            RestartSec=5
+            NoNewPrivileges=true
+            PrivateTmp=true
+            [Install]
+            WantedBy=multi-user.target" | sudo tee "$SYSTEMD_FILE" > /dev/null
+
+            sudo systemctl daemon-reload
+            sudo systemctl enable "$SERVICE_NAME"
+
+            if systemctl is-active --quiet "$SERVICE_NAME"; then
+              sudo systemctl reload "$SERVICE_NAME" || sudo systemctl restart "$SERVICE_NAME"
+            else
+              sudo systemctl start "$SERVICE_NAME"
+            fi
+
+            set +e
+            OK=""
+            for i in {1..15}; do
+              sleep 2
+              if curl -fsS "http://127.0.0.1:$APP_PORT$HEALTH_PATH" >/dev/null; then
+                OK="yes"; break
+              fi
+            done
+            if [ -z "$OK" ]; then
+              echo "Health check failed — rolling back..."
+              if [ -n "$PREVIOUS_TARGET" ] && [ -d "$PREVIOUS_TARGET" ]; then
+                ln -sfn "$PREVIOUS_TARGET" "$CURRENT_LINK"
+                sudo systemctl reload "$SERVICE_NAME" || sudo systemctl restart "$SERVICE_NAME"
+              fi
+              sudo journalctl -u "$SERVICE_NAME" --no-pager -n 200
+              exit 1
+            fi
+
+            ls -1dt "$RELEASES_DIR"/* | tail -n +6 | xargs -r rm -rf
+            echo "Deploy succeeded: $RELEASE_NAME is live."
+          EOF
+
+      - name: External health check (optional)
+        continue-on-error: true
+        run: |
+          curl -fsS --retry 5 --retry-delay 2 "http://${{ vars.DEV_SERVER_IP }}:${{ env.APP_PORT }}${{ env.HEALTH_PATH }}"

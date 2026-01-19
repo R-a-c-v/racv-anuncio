@@ -10,7 +10,16 @@ migrate = Migrate()
 
 
 def create_app(config_mode='development'):
+ 
+
     app = Flask(__name__)
+    
+    if config_mode == "testing":
+       app.config.update(
+        TESTING=True,
+        SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+       )
     CORS(app)
     app.config.from_object(config[config_mode])    
    

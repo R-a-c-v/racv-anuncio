@@ -73,12 +73,13 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        
+
       - name: Debug files
         run: |
          echo "Current directory: $(pwd)"
+         echo "Listing files:"
          ls -la
-
+         
       - name: Package repository (tar.gz)
         run: |
           RELEASE_NAME="${{ env.APP_NAME }}"

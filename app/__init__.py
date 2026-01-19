@@ -9,7 +9,7 @@ migrate = Migrate()
 #123
 
 
-def create_app(config_mode='development'):
+def create_app(config_mode):
  
 
     app = Flask(__name__)

@@ -96,9 +96,9 @@ jobs:
           echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
       - name: Debug environment variables
         run: |
-          echo "VM_USERNAME=${{ env.VM_USERNAME }}"
-          echo "VM_IP=${{ env.VM_IP }}"
-          
+          echo "VM_USERNAME=${{ vars.VM_USERNAME }}"
+          echo "VM_IP=${{ vars.VM_IP }}"
+
       - name: Debug SSH key
         run: |
           ssh-keygen -l -f ~/.ssh/deploy_key.pem
@@ -106,12 +106,12 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
+
           cat << 'EOF' > ~/.ssh/deploy_key.pem
           ${{ secrets.SSH_KEY_001 }}
           EOF
-          chmod 600 ~/.ssh/deploy_key.pem
-
-
+            chmod 600 ~/.ssh/deploy_key.pem
+            ls -la ~/.ssh
       - name: Create env file from secrets
         run: |
           cat > app.env << EOF

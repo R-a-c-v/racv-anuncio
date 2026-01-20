@@ -14,6 +14,8 @@ env:
   SERVICE_NAME: "racv-anunciante.service"
   APP_PORT: "5001"  # altere a porta se diferente
   HEALTH_PATH: "/ping"
+  VM_USERNAME: "redeautocvuser"   # <--- aqui
+  VM_IP: "74.235.237.161"       # <--- aqui
 
 jobs:
   build:
@@ -116,13 +118,13 @@ jobs:
         run: |
           scp -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
             "${{ env.RELEASE_NAME }}.tar.gz" app.env \
-            ${{ vars.VM_USERNAME }}@${{ vars.VM_IP }}:~/
+            ${{ env.VM_USERNAME }}@${{ env.VM_IP }}:~/
 
       - name: Deploy on server (atomic symlink + systemd + health + rollback)
         shell: bash
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
-            ${{ vars.VM_USERNAME }}@${{ vars.VM_IP }} \
+            ${{ env.VM_USERNAME }}@${{ env.VM_IP }} \
             "export RELEASE_NAME='${{ env.RELEASE_NAME }}'; \
              export APP_ROOT='${{ env.APP_ROOT }}'; \
              export SERVICE_NAME='${{ env.SERVICE_NAME }}'; \

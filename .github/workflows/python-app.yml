@@ -98,7 +98,11 @@ jobs:
         run: |
           echo "VM_USERNAME=${{ env.VM_USERNAME }}"
           echo "VM_IP=${{ env.VM_IP }}"
-
+          
+      - name: Debug SSH key
+        run: |
+          ssh-keygen -l -f ~/.ssh/deploy_key.pem
+ 
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh

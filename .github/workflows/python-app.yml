@@ -92,6 +92,10 @@ jobs:
             --exclude='__pycache__' \
             . || true
           echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
+      - name: Debug environment variables
+        run: |
+          echo "VM_USERNAME=${{ vars.VM_USERNAME }}"
+          echo "VM_IP=${{ vars.VM_IP }}"
 
       - name: Set Up SSH Key
         run: |
@@ -109,6 +113,7 @@ jobs:
       - name: Upload release bundle
         run: |
           scp -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
+            app.env \
             "${{ env.RELEASE_NAME }}.tar.gz" \
             ${{ vars.VM_USERNAME }}@${{ vars.VM_IP }}:~/
 

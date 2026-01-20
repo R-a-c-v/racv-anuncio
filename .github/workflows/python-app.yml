@@ -16,14 +16,7 @@ env:
   HEALTH_PATH: "/ping"
   VM_USERNAME: "redeautocvuser"
   VM_IP: "74.235.237.161"
-  DEPLOY_KEY: >
-    -----BEGIN OPENSSH PRIVATE KEY-----
-    b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-    QyNTUxOQAAACBRE7OasU4Mfk1a8OfXdaKqe/+6Yw3JGjEqU2r6HBMcUwAAAJjfa2c+32tn
-    PgAAAAtzc2gtZWQyNTUxOQAAACBRE7OasU4Mfk1a8OfXdaKqe/+6Yw3JGjEqU2r6HBMcUw
-    AAAEAXuOp2YovMna66h7WW1RJ+HRaUodNvtp7a2gO1bON6OFETs5qxTgx+TVrw59d1oqp7
-    /7pjDckaMSpTavocExxTAAAAEGdpdGh1Yi1hY3Rpb24tMDEBAgMEBQ==
-    -----END OPENSSH PRIVATE KEY----- 
+
 
 jobs:
   build:
@@ -83,6 +76,18 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+      - name: Set up deploy key
+        run: |
+          cat > ~/deploy_key.pem << 'EOF'
+          -----BEGIN OPENSSH PRIVATE KEY-----
+          b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+          QyNTUxOQAAACBRE7OasU4Mfk1a8OfXdaKqe/+6Yw3JGjEqU2r6HBMcUwAAAJjfa2c+32tn
+          PgAAAAtzc2gtZWQyNTUxOQAAACBRE7OasU4Mfk1a8OfXdaKqe/+6Yw3JGjEqU2r6HBMcUw
+          AAAEAXuOp2YovMna66h7WW1RJ+HRaUodNvtp7a2gO1bON6OFETs5qxTgx+TVrw59d1oqp7
+          /7pjDckaMSpTavocExxTAAAAEGdpdGh1Yi1hY3Rpb24tMDEBAgMEBQ==
+          -----END OPENSSH PRIVATE KEY-----
+          EOF
+          chmod 400 ~/deploy_key.pem
 
       - name: Debug files
         run: |

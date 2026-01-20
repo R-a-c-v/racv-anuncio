@@ -109,8 +109,8 @@ jobs:
           EOF
       - name: Debug secrets presence
         run: |
-          echo "USER=${{ secrets.VM_USERNAME }}"
-          echo "IP= ${{ secrets.VM_IP }}"
+          echo "VM_USERNAME=${{ secrets.VM_USERNAME }}"
+          echo "VM_IP= ${{ secrets.VM_IP }}"
 
       - name: Upload release bundle
         run: |

@@ -85,11 +85,13 @@ jobs:
           set -x
           RELEASE_NAME="${{ env.APP_NAME }}"
           tar --warning=no-file-changed  \
-            --exclude='.git' \
-            --exclude='*.tar.gz' \
-            --exclude='venv' \
-            --exclude='.venv' \
-            --exclude='__pycache__' \
+              --ignore-failed-read \
+              -czvf "${RELEASE_NAME}.tar.gz" \
+              --exclude='.git' \
+              --exclude='*.tar.gz' \
+              --exclude='venv' \
+              --exclude='.venv' \
+              --exclude='__pycache__' \
             .
           echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
 

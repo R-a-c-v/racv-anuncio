@@ -170,7 +170,7 @@ jobs:
             fi
             pip show gunicorn >/dev/null 2>&1 || pip install gunicorn
 
-            if [ -f ~/app.env ]; then
+            if [ -f ~/app.env ]  && [ ! -f "$SHARED_DIR/.env" ]; then
               sudo cp ~/app.env "$SHARED_DIR/.env"
               sudo chown "$APP_USER":"$APP_USER" "$SHARED_DIR/.env"
               sudo chmod 600 "$SHARED_DIR/.env"

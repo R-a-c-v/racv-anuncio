@@ -30,7 +30,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
       - name: Install system dependencies
-        run: |  
+        run: |
           sudo apt-get update
           sudo apt-get install -y \
             python3-dev \
@@ -38,20 +38,20 @@ jobs:
             python3-systemd \
             ubuntu-advantage-tools \
             unattended-upgrades \
+            cmake \
             libdbus-1-dev \
             libcairo2-dev \
             libglib2.0-dev \
             libgirepository1.0-dev \
             pkg-config \
             gcc \
-            cmake \
-            libdbus-1-dev \
-            libglib2.0-dev \
             libffi-dev \
             libssl-dev \
             gir1.2-gtk-3.0 \
             build-essential \
             libcairo2
+            sudo apt-get clean
+
 
 
       # Configurar Python

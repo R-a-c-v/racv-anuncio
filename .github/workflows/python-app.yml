@@ -171,7 +171,7 @@ jobs:
             pip show gunicorn >/dev/null 2>&1 || pip install gunicorn
 
             if [ -f ~/app.env ]; then
-              sudo mv ~/app.env "$SHARED_DIR/.env"
+              sudo cp ~/app.env "$SHARED_DIR/.env"
               sudo chown "$APP_USER":"$APP_USER" "$SHARED_DIR/.env"
               sudo chmod 600 "$SHARED_DIR/.env"
             fi
@@ -188,7 +188,7 @@ jobs:
             User=$APP_USER
             WorkingDirectory=$APP_ROOT/current
             Environment=PYTHONPATH=$APP_ROOT/current
-            EnvironmentFile=$SHARED_DIR/.env
+            EnvironmentFile=/opt/racv-anunciante/shared/.env
             ExecStart=$VENV_DIR/bin/gunicorn app.app:app --bind 0.0.0.0:$APP_PORT --workers 3 --timeout 60 --access-logfile - --error-logfile -
             Restart=always
             RestartSec=5

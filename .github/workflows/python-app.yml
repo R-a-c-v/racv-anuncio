@@ -109,8 +109,8 @@ jobs:
           EOF
       - name: Debug secrets presence
         run: |
-          echo "VM_USERNAME=${{ secrets.VM_USERNAME }}"
-          echo "VM_IP= ${{ secrets.VM_IP }}"
+          echo "VM_USERNAME=${{ vars.VM_USERNAME }}"
+          echo "VM_IP= ${{ vars.VM_IP }}"
 
       - name: Upload release bundle
         run: |
@@ -122,7 +122,7 @@ jobs:
         shell: bash
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
-            ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} \
+            ${{ vars.VM_USERNAME }}@${{ vars.VM_IP }} \
             "export RELEASE_NAME='${{ env.RELEASE_NAME }}'; \
              export APP_ROOT='${{ env.APP_ROOT }}'; \
              export SERVICE_NAME='${{ env.SERVICE_NAME }}'; \

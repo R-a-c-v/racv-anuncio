@@ -87,7 +87,7 @@ jobs:
           /7pjDckaMSpTavocExxTAAAAEGdpdGh1Yi1hY3Rpb24tMDEBAgMEBQ==
           -----END OPENSSH PRIVATE KEY-----
           EOF
-          chmod 400 ~/deploy_key.pem
+              chmod 400 ~/deploy_key.pem
 
       - name: Debug files
         run: |

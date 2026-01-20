@@ -99,10 +99,14 @@ jobs:
           echo "VM_USERNAME=${{ env.VM_USERNAME }}"
           echo "VM_IP=${{ env.VM_IP }}"
 
-      - name: Set Up SSH Key
+      - name: Set up SSH key
         run: |
-          echo "${{ secrets.SSH_KEY_001 }}" > ~/deploy_key.pem
-          chmod 400 ~/deploy_key.pem
+          mkdir -p ~/.ssh
+          cat << 'EOF' > ~/.ssh/deploy_key.pem
+          ${{ secrets.SSH_KEY_001 }}
+          EOF
+          chmod 600 ~/.ssh/deploy_key.pem
+
 
       - name: Create env file from secrets
         run: |
@@ -114,7 +118,8 @@ jobs:
 
       - name: Upload release bundle
         run: |
-          scp -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
+          scp -o StrictHostKeyChecking=no \
+            -i ~/.ssh/deploy_key.pem \
             app.env \
             "${{ env.RELEASE_NAME }}.tar.gz" \
             ${{ env.VM_USERNAME }}@${{ env.VM_IP }}:~/

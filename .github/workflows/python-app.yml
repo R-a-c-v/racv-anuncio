@@ -99,7 +99,7 @@ jobs:
 
       - name: Set Up SSH Key
         run: |
-          echo "${{ secrets.SSH_KEY_001 }}" > ~/deploy_key.pem
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/deploy_key.pem
           chmod 400 ~/deploy_key.pem
 
       - name: Create env file from secrets

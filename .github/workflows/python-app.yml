@@ -116,7 +116,7 @@ jobs:
         run: |
           scp -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
             "${{ env.RELEASE_NAME }}.tar.gz" app.env \
-            ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }}:~/
+            ${{ vars.VM_USERNAME }}@${{ vars.VM_IP }}:~/
 
       - name: Deploy on server (atomic symlink + systemd + health + rollback)
         shell: bash

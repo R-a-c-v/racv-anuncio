@@ -12,11 +12,8 @@ env:
   APP_NAME: "racv-anunciante"
   APP_ROOT: "/opt/racv-anunciante"
   SERVICE_NAME: "racv-anunciante.service"
-  APP_PORT: "5001"
+  APP_PORT: "5001"  # altere a porta se diferente
   HEALTH_PATH: "/ping"
-  VM_USERNAME: "redeautocvuser"
-  VM_IP: "74.235.237.161"
-
 
 jobs:
   build:
@@ -76,18 +73,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      - name: Set up deploy key
-        run: |
-          cat > ~/deploy_key.pem << 'EOF'
-          -----BEGIN OPENSSH PRIVATE KEY-----
-          b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-          QyNTUxOQAAACBRE7OasU4Mfk1a8OfXdaKqe/+6Yw3JGjEqU2r6HBMcUwAAAJjfa2c+32tn
-          PgAAAAtzc2gtZWQyNTUxOQAAACBRE7OasU4Mfk1a8OfXdaKqe/+6Yw3JGjEqU2r6HBMcUw
-          AAAEAXuOp2YovMna66h7WW1RJ+HRaUodNvtp7a2gO1bON6OFETs5qxTgx+TVrw59d1oqp7
-          /7pjDckaMSpTavocExxTAAAAEGdpdGh1Yi1hY3Rpb24tMDEBAgMEBQ==
-          -----END OPENSSH PRIVATE KEY-----
-          EOF
-              chmod 400 ~/deploy_key.pem
 
       - name: Debug files
         run: |
@@ -99,20 +84,18 @@ jobs:
         run: |
           set -x
           RELEASE_NAME="${{ env.APP_NAME }}"
-          tar --warning=no-file-changed  \
-              --ignore-failed-read \
-              -czvf "${RELEASE_NAME}.tar.gz" \
-              --exclude='.git' \
-              --exclude='*.tar.gz' \
-              --exclude='venv' \
-              --exclude='.venv' \
-              --exclude='__pycache__' \
-            .
+          tar --warning=no-file-changed -czvf "${RELEASE_NAME}.tar.gz" \
+            --exclude='.git' \
+            --exclude='*.tar.gz' \
+            --exclude='venv' \
+            --exclude='.venv' \
+            --exclude='__pycache__' \
+            . || true
           echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
 
       - name: Set Up SSH Key
         run: |
-          echo "${{ env.SSH_KEY_001 }}" > ~/deploy_key.pem
+          echo "${{ secrets.SSH_KEY_001 }}" > ~/deploy_key.pem
           chmod 400 ~/deploy_key.pem
 
       - name: Create env file from secrets
@@ -122,22 +105,18 @@ jobs:
           SECRET_KEY=${{ secrets.ANUNCIANTE_SECRET_KEY }}
           FLASK_ENV=production
           EOF
-      - name: Debug secrets presence
-        run: |
-          echo "VM_USERNAME=${{ vars.VM_USERNAME }}"
-          echo "VM_IP= ${{ vars.VM_IP }}"
 
       - name: Upload release bundle
         run: |
           scp -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
-            "${{ env.RELEASE_NAME }}.tar.gz" app.env \
-            ${{ env.VM_USERNAME }}@${{ env.VM_IP }}:~/
+            "${{ env.RELEASE_NAME }}.tar.gz" \
+            ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }}:~/
 
       - name: Deploy on server (atomic symlink + systemd + health + rollback)
         shell: bash
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
-            ${{ env.VM_USERNAME }}@${{ env.VM_IP }} \
+            ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} \
             "export RELEASE_NAME='${{ env.RELEASE_NAME }}'; \
              export APP_ROOT='${{ env.APP_ROOT }}'; \
              export SERVICE_NAME='${{ env.SERVICE_NAME }}'; \

@@ -99,10 +99,6 @@ jobs:
           echo "VM_USERNAME=${{ vars.VM_USERNAME }}"
           echo "VM_IP=${{ vars.VM_IP }}"
 
-      - name: Debug SSH key
-        run: |
-          ssh-keygen -l -f ~/.ssh/deploy_key.pem
- 
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
@@ -125,13 +121,13 @@ jobs:
           scp -o StrictHostKeyChecking=no \
             -i ~/.ssh/deploy_key.pem \
             app.env \
-            "${{ env.RELEASE_NAME }}.tar.gz" \
-            ${{ env.VM_USERNAME }}@${{ env.VM_IP }}:~/
+          "${{ env.RELEASE_NAME }}.tar.gz" \
+          ${{ env.VM_USERNAME }}@${{ env.VM_IP }}:~/
 
       - name: Deploy on server (atomic symlink + systemd + health + rollback)
         shell: bash
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/deploy_key.pem \
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key.pem \
             ${{ env.VM_USERNAME }}@${{ env.VM_IP }} \
             "export RELEASE_NAME='${{ env.RELEASE_NAME }}'; \
              export APP_ROOT='${{ env.APP_ROOT }}'; \

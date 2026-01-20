@@ -40,13 +40,17 @@ jobs:
             unattended-upgrades \
             libdbus-1-dev \
             libcairo2-dev \
+            libglib2.0-dev \
             libgirepository1.0-dev \
             pkg-config \
             gcc \
             cmake \
+            libdbus-1-dev \
+            libglib2.0-dev \
             libffi-dev \
             libssl-dev \
             gir1.2-gtk-3.0 \
+            build-essential \
             libcairo2
 
 

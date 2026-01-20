@@ -12,18 +12,19 @@ env:
   APP_NAME: "racv-anunciante"
   APP_ROOT: "/opt/racv-anunciante"
   SERVICE_NAME: "racv-anunciante.service"
-  APP_PORT: "5001"  # altere a porta se diferente
+  APP_PORT: "5001"
   HEALTH_PATH: "/ping"
-  VM_USERNAME: "redeautocvuser"   # <--- aqui
-  VM_IP: "74.235.237.161"       # <--- aqui
+  VM_USERNAME: "redeautocvuser"
+  VM_IP: "74.235.237.161"
   DEPLOY_KEY: |
-    -----BEGIN OPENSSH PRIVATE KEY-----
+   -----BEGIN OPENSSH PRIVATE KEY-----
     b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
     QyNTUxOQAAACBRE7OasU4Mfk1a8OfXdaKqe/+6Yw3JGjEqU2r6HBMcUwAAAJjfa2c+32tn
     PgAAAAtzc2gtZWQyNTUxOQAAACBRE7OasU4Mfk1a8OfXdaKqe/+6Yw3JGjEqU2r6HBMcUw
     AAAEAXuOp2YovMna66h7WW1RJ+HRaUodNvtp7a2gO1bON6OFETs5qxTgx+TVrw59d1oqp7
     /7pjDckaMSpTavocExxTAAAAEGdpdGh1Yi1hY3Rpb24tMDEBAgMEBQ==
     -----END OPENSSH PRIVATE KEY-----
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -106,7 +107,7 @@ jobs:
 
       - name: Set Up SSH Key
         run: |
-          echo "${{ env.deploy_key }}" > ~/deploy_key.pem
+          echo "${{ env.SSH_KEY_001 }}" > ~/deploy_key.pem
           chmod 400 ~/deploy_key.pem
 
       - name: Create env file from secrets

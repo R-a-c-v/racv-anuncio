@@ -29,4 +29,8 @@ def pesquisa_veiculo_carro():
 @app.route("/filtragem", methods=['GET', 'DELETE', 'PUT'])
 def pesquisa_filtrada():
     if request.method == 'GET': return filtragem()
+
+@app.route("/teste")
+def resposta():
+    return jsonify({"status":"ok"})
 #end-def

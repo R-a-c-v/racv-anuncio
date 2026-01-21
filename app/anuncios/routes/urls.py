@@ -30,4 +30,7 @@ def pesquisa_veiculo_carro():
 def pesquisa_filtrada():
     if request.method == 'GET': return filtragem()
 
+@app.get("/ping")
+def ping():
+    return jsonify({"status": "ok"}), 200
 #end-def

@@ -40,6 +40,6 @@ def resposta():
     return jsonify({"status":"ok"}),200
 
 @bp.route("/teste")
-def resposta():
+def respostas():
     return jsonify({"status":"Funciona e funciona mesmo"}),200
 #end-def

@@ -2,7 +2,7 @@ from flask import  request
 from flask import  jsonify
 from flask import  Blueprint
  
-from  ...app import app
+#from  ...app import app
 from app.anuncios.services.controllers import remover  
 from app.anuncios.services.controllers import listar_todos
 from app.anuncios.services.controllers import listar

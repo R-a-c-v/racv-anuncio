@@ -35,7 +35,7 @@ def pesquisa_veiculo_carro():
 def pesquisa_filtrada():
     if request.method == 'GET': return filtragem()
 
-@bp.route("/teste")
+@bp.route("/ping")
 def resposta():
     return jsonify({"status":"Funciona e funciona mesmo"}),200
 #end-def

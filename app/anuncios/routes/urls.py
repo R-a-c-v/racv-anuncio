@@ -37,5 +37,9 @@ def pesquisa_filtrada():
 
 @bp.route("/ping")
 def resposta():
+    return jsonify({"status":"ok"}),200
+
+@bp.route("/teste")
+def resposta():
     return jsonify({"status":"Funciona e funciona mesmo"}),200
 #end-def

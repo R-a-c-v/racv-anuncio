@@ -174,7 +174,7 @@ def pesquisa_principal():
 
             lista_pesquisa_marca.append( veiculo.to_dict()) 
     
-            resposta = requests.get(f"http://127.0.0.1:5000/anunciante/{id_anunciante}")
+            resposta = requests.get(f"http://127.0.0.1:5006/anunciante/{id_anunciante}")
             lista_pesquisa_local_anunciante.append(resposta.json())  
         
         return jsonify({"marca":lista_pesquisa_marca,"localizacao":lista_pesquisa_local_anunciante})
@@ -184,7 +184,7 @@ def pesquisa_principal():
             "ilha":local
         }
         
-        respostas = requests.get(f"http://127.0.0.1:5000/pesquisa_filtragem_inicio/",params=param)
+        respostas = requests.get(f"http://127.0.0.1:5006/pesquisa_filtragem_inicio/",params=param)
         
         #print("olimmeeeeee",respostas.json()[0]["ilha"])     
         if respostas.status_code !=500:
@@ -256,7 +256,7 @@ def filtragem():
             "ilha":local
         }
         print("dddd" , local)
-        respostas = requests.get(f"http://127.0.0.1:5000/pesquisa_filtragem_inicio/",params=param)
+        respostas = requests.get(f"http://127.0.0.1:5006/pesquisa_filtragem_inicio/",params=param)
         
         #print("olimmeeeeee",respostas.json()[0]["ilha"])     
         if respostas.status_code !=500:
@@ -288,7 +288,7 @@ def filtragem():
             "ilha":local
         }
         
-        respostas = requests.get(f"http://127.0.0.1:5000/pesquisa_filtragem_inicio/",params=param)
+        respostas = requests.get(f"http://127.0.0.1:5006/pesquisa_filtragem_inicio/",params=param)
         
         #print("olimmeeeeee",respostas.json()[0]["ilha"])     
         dados = respostas.json()     
